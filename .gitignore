@@ -1,0 +1,41 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# env & secrets
+.env
+.env.local
+.env.*.local
+
+# prisma
+apps/api/prisma/migrations/dev.db
+
+# logs / os
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# ide
+.idea/
+.vscode/
+*.swp
+
+# test artifacts
+coverage/
+playwright-report/
+test-results/
+.playwright-cli/
+
+# docker local volumes
+data/
+
+# vendored external design system reference (not part of the product)
+hallmark/

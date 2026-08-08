@@ -1,0 +1,21 @@
+{
+  "name": "social-media-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Multi-tenant social media management platform (Buffer/Hootsuite-style)",
+  "packageManager": "pnpm@11.20.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter @pulse/api start:dev",
+    "build": "pnpm -r --filter \"./apps/*\" build",
+    "db:generate": "pnpm --filter @pulse/api prisma:generate",
+    "db:migrate": "pnpm --filter @pulse/api prisma:migrate",
+    "db:studio": "pnpm --filter @pulse/api prisma:studio",
+    "db:seed": "pnpm --filter @pulse/api prisma:seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

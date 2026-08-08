@@ -1,0 +1,75 @@
+/*
+ * Hallmark · genre: modern-minimal · macrostructure: workbench · theme: cobalt
+ * enrichment: none (typography only) · nav: n3-side-rail · footer: none (app)
+ * · pre-emit critique: P4 H5 E5 S5 R5 V4
+ */
+
+:root {
+  /* paper — cool engineered white, never #fff */
+  --color-paper: oklch(98.5% 0.004 250);
+  --color-paper-2: oklch(96.2% 0.005 250);
+  --color-paper-3: oklch(93.5% 0.006 250);
+
+  /* ink — cool charcoal, never #000 */
+  --color-ink: oklch(24% 0.02 258);
+  --color-ink-2: oklch(34% 0.018 257);
+  --color-ink-3: oklch(52% 0.014 256);
+
+  /* hairlines — structure over shadow */
+  --color-rule: oklch(90% 0.006 250);
+  --color-rule-2: oklch(83% 0.008 250);
+  --color-rule-3: oklch(72% 0.01 252);
+
+  /* the one signal — electric cobalt */
+  --color-accent: oklch(58% 0.2 256);
+  --color-accent-hover: oklch(53% 0.19 256);
+  --color-accent-ink: oklch(99% 0 0);
+  --color-accent-soft: oklch(94.5% 0.03 256);
+  --color-accent-line: oklch(78% 0.09 256);
+
+  /* graphite band — the single dark beat */
+  --color-graphite: oklch(22% 0.016 260);
+  --color-graphite-2: oklch(27% 0.017 259);
+  --color-graphite-ink: oklch(88% 0.01 258);
+  --color-graphite-muted: oklch(68% 0.012 256);
+
+  /* status signals — instrument lamps */
+  --color-ok: oklch(60% 0.12 156);
+  --color-ok-soft: oklch(94% 0.03 156);
+  --color-warn: oklch(70% 0.14 62);
+  --color-warn-soft: oklch(95% 0.03 85);
+  --color-fail: oklch(58% 0.17 24);
+  --color-fail-soft: oklch(94% 0.03 24);
+  --color-idle: oklch(62% 0.02 255);
+  --color-idle-soft: oklch(94% 0.006 250);
+
+  /* type */
+  --font-display: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  /* radii — drawn with a ruler */
+  --radius: 6px;
+  --radius-lg: 10px;
+
+  /* 4 pt space scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-med: 240ms;
+  --dur-slow: 600ms;
+
+  --sidebar-w: 236px;
+  --topbar-h: 56px;
+}
