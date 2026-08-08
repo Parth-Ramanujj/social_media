@@ -103,10 +103,10 @@ packages/shared-types/  shared Platform/Role/limits types (raw TS source, worksp
 - [x] Posts/composer/scheduler, per-account variants, approval workflow, CSV bulk
 - [x] BullMQ publishing engine (idempotent, retry/backoff) — verified live fire
 - [x] Next.js web app: auth, publish desk, composer, accounts, members, audit, settings
+- [x] Unified inbox (mock → assign → reply → resolve), analytics + CSV export (demo data), notifications (bell, unread badge, mark-all-read)
 - [ ] Meta provider end-to-end (connect → post → analytics) — reference implementation
 - [ ] X / LinkedIn / YouTube / Pinterest / TikTok providers
-- [ ] Unified inbox, analytics + export, notifications
-- [ ] Dockerfile/deploy config for Render/Railway/Fly.io
+- [ ] Docker/deploy config
 
 ## Security notes
 

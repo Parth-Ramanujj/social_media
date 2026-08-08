@@ -8,6 +8,7 @@ import { EncryptionModule } from './common/encryption/encryption.module';
 import { AuditModule } from './common/audit/audit.module';
 import { NotificationsModule } from './common/notifications/notifications.module';
 import { MailerModule } from './common/mailer/mailer.module';
+import { HealthModule } from './common/health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
@@ -16,6 +17,8 @@ import { InvitationsModule } from './invitations/invitations.module';
 import { PostsModule } from './posts/posts.module';
 import { PublishingModule } from './publishing/publishing.module';
 import { OauthModule } from './oauth/oauth.module';
+import { InboxModule } from './inbox/inbox.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -36,6 +39,7 @@ import { OauthModule } from './oauth/oauth.module';
     AuditModule,
     NotificationsModule,
     MailerModule,
+    HealthModule,
     AuthModule,
     UsersModule,
     WorkspacesModule,
@@ -44,6 +48,8 @@ import { OauthModule } from './oauth/oauth.module';
     PostsModule,
     PublishingModule,
     OauthModule,
+    InboxModule,
+    AnalyticsModule,
   ],
   providers: [
     {

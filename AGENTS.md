@@ -47,6 +47,7 @@ Seed workspace: `Pulse HQ` (`seed-workspace`). Dev invite links are returned in 
 - **class-validator rejects `undefined`** on optional DTO fields — add `@IsOptional()` (e.g. `plan?` in CreateWorkspaceDto).
 - Prisma: hung `prisma migrate dev` processes hold a postgres advisory lock; kill stray node processes before retrying.
 - `@prisma/client` IDs are cuid strings, NOT UUIDs — don't use `@IsUUID` on route params.
+- Count endpoints that the web reads as `{count}` must return an OBJECT (`{ count }`), not a bare number (bitten by `/notifications/unread-count` — badge + mark-all-read silently didn't render).
 - `pnpm --filter @pulse/api exec <cmd>` runs with cwd = `apps/api`. Relative env-file paths are resolved from the schema dir; prefer the prisma.config.ts mechanism.
 - Schema edits: edit `prisma/schema.prisma` → `pnpm db:migrate -- --name x` → `pnpm db:generate`. Run `pnpm --filter @pulse/api build` before starting the server (manual start uses `dist/`).
 - Prisma 7 deprecation: `package.json#prisma` seed config removed in favor of `prisma.config.ts` (already migrated).
@@ -61,8 +62,8 @@ No test framework wired yet (Jest not installed). Verification is manual:
 
 ## Repo status (what exists vs. planned)
 
-Done: monorepo scaffold, auth (signup/login/refresh/logout/me), workspaces, members/roles, invitations, audit log, encryption, SocialProvider interface + registry, full Prisma schema + initial migration, docker-compose (postgres/redis/minio/mailpit), .env.example, seed, posts/composer/scheduler + CSV bulk + approval, BullMQ publishing engine (verified live fire), Next.js web app (auth, publish desk, composer, accounts, members, audit, settings — E2E verified via Playwright).
-Planned (build order): Meta provider end-to-end → X/LinkedIn/YouTube/Pinterest/TikTok → unified inbox → analytics + export → notifications → Docker/deploy config.
+Done: monorepo scaffold, auth (signup/login/refresh/logout/me), workspaces, members/roles, invitations, audit log, encryption, SocialProvider interface + registry, full Prisma schema + initial migration, docker-compose (postgres/redis/minio/mailpit), .env.example, seed, posts/composer/scheduler + CSV bulk + approval, BullMQ publishing engine (verified live fire), Next.js web app (auth, publish desk, composer, accounts, members, audit, settings), unified inbox (mock → assign → reply → resolve), analytics + CSV export (demo data), notifications (bell, unread badge, mark-all-read). All E2E verified via Playwright.
+Planned (build order): Meta provider end-to-end → X/LinkedIn/YouTube/Pinterest/TikTok → Docker/deploy config → notifications polish.
 
 ## Web app (apps/web)
 
