@@ -1,0 +1,22 @@
+# Local verification override: re-map prod ports away from the running dev stack.
+services:
+  postgres:
+    ports:
+      - "55432:5432"
+  redis:
+    ports:
+      - "56379:6379"
+  minio:
+    ports:
+      - "9100:9000"
+      - "9101:9001"
+  mailpit:
+    ports:
+      - "11025:1025"
+      - "18025:8025"
+  api:
+    ports:
+      - "4100:4000"
+  web:
+    ports:
+      - "3100:3000"

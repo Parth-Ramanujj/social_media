@@ -22,6 +22,8 @@ export interface AppConfig {
     forcePathStyle: boolean;
   };
   platformEnabled: Record<Platform, boolean>;
+  meta: { webhookVerifyToken: string };
+  whatsapp: { webhookVerifyToken: string; accessToken: string; phoneNumberId: string; publishTo: string };
 }
 
 export function configuration(): AppConfig {
@@ -69,8 +71,16 @@ export function configuration(): AppConfig {
       x: process.env.X_ENABLED === 'true',
       linkedin: process.env.LINKEDIN_ENABLED === 'true',
       youtube: process.env.YOUTUBE_ENABLED === 'true',
-      pinterest: process.env.PINTEREST_ENABLED === 'true',
-      tiktok: process.env.TIKTOK_ENABLED === 'true',
+      whatsapp: process.env.WHATSAPP_ENABLED === 'true',
+    },
+    whatsapp: {
+      webhookVerifyToken: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN ?? '',
+      accessToken: process.env.WHATSAPP_ACCESS_TOKEN ?? '',
+      phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID ?? '',
+      publishTo: process.env.WHATSAPP_PUBLISH_TO ?? '',
+    },
+    meta: {
+      webhookVerifyToken: process.env.META_WEBHOOK_VERIFY_TOKEN ?? '',
     },
   };
 }

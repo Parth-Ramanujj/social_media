@@ -22,6 +22,9 @@ export class PostsService {
 
   async create(opts: { workspaceId: string; userId: string; dto: CreatePostDto }) {
     const { workspaceId, userId, dto } = opts;
+    if (!dto.variants.length) {
+      throw new BadRequestException('At least one social account is required');
+    }
     const accounts = await this.loadAccounts(workspaceId, dto.variants.map((v) => v.socialAccountId));
 
     const status: PostStatus = dto.status === 'scheduled' ? 'scheduled' : dto.status === 'queued' ? 'queued' : 'draft';
@@ -201,10 +204,18 @@ export class PostsService {
     if (!['draft', 'queued', 'scheduled', 'failed', 'cancelled'].includes(post.status)) {
       throw new ConflictException(`Cannot publish a post in status ${post.status}`);
     }
+    if (post.variants.length === 0) {
+      throw new BadRequestException(
+        'This post has no social accounts attached — edit it in the composer and add an account first',
+      );
+    }
     await this.prisma.$transaction(async (tx) => {
       await tx.post.update({ where: { id: post.id }, data: { status: 'scheduled' } });
       await tx.postPlatformVariant.updateMany({
-        where: { postId: post.id, publishStatus: { in: ['pending', 'scheduled', 'failed'] } },
+        where: {
+          postId: post.id,
+          publishStatus: { in: ['pending', 'scheduled', 'failed', 'publishing'] },
+        },
         data: { publishStatus: 'scheduled', scheduledAt: new Date() },
       });
     });

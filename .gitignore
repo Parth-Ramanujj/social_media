@@ -19,6 +19,7 @@ apps/api/prisma/migrations/dev.db
 
 # logs / os
 *.log
+*.out
 npm-debug.log*
 .DS_Store
 Thumbs.db

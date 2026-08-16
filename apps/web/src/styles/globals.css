@@ -289,6 +289,9 @@ select.input {
 .chip--failed { color: var(--color-fail); border-color: oklch(85% 0.06 24); background: var(--color-fail-soft); }
 .chip--failed .dot { background: var(--color-fail); }
 
+.chip--warning { color: var(--color-warn); border-color: oklch(85% 0.06 85); background: var(--color-warn-soft); }
+.chip--warning .dot { background: var(--color-warn); }
+
 .chip--draft, .chip--cancelled { color: var(--color-ink-3); }
 .chip--draft .dot, .chip--cancelled .dot { background: var(--color-idle); }
 

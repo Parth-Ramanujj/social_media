@@ -164,7 +164,7 @@ function AccountsInner() {
             <div key={platform} className="acc-card">
               <div className="acc-card__head">
                 <span className="acc-card__name" style={{ textTransform: 'capitalize' }}>
-                  {platform}
+                  {platform === 'meta' ? 'Instagram & Facebook' : platform}
                 </span>
                 <PlatformMark platform={platform} size={16} />
               </div>

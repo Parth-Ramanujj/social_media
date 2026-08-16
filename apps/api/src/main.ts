@@ -21,7 +21,8 @@ for (const path of candidates) {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // rawBody: webhook signature verification needs the exact bytes Meta sent.
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.setGlobalPrefix('api');
   app.use(helmet());

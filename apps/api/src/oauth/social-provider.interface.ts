@@ -90,8 +90,16 @@ export interface SocialProvider {
   /** Comments/DMs since `since` (ISO). Used by the inbox polling worker. */
   fetchInbox(account: SocialAccountRef, since: string): Promise<InboxItem[]>;
 
-  /** Reply to a comment/DM from the unified inbox. */
-  reply(account: SocialAccountRef, externalMessageId: string, text: string): Promise<void>;
+  /** Reply to a comment/DM from the unified inbox. `context.metadata` carries
+   * webhook-derived sender info (e.g. WhatsApp's `from` wa_id) stored on the
+   * inbox row — platforms that can't resolve the recipient from the message id
+   * alone need it (e.g. WhatsApp Cloud API). */
+  reply(
+    account: SocialAccountRef,
+    externalMessageId: string,
+    text: string,
+    context?: { metadata?: Record<string, unknown> },
+  ): Promise<void>;
 
   /**
    * Webhook signature verification. Return false for providers without

@@ -22,11 +22,51 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - pulse_redisdata:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-pulse}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-pulse-minio-secret}
+    volumes:
+      - pulse_miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8025"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pulse}:${POSTGRES_PASSWORD:-pulse}@postgres:5432/${POSTGRES_DB:-pulse}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["sh", "-c", "cd /app/apps/api && ./node_modules/.bin/prisma migrate deploy"]
+    restart: "no"
 
   api:
     build:
@@ -42,9 +82,15 @@ services:
     ports:
       - "4000:4000"
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      mailpit:
         condition: service_healthy
 
   web:
@@ -62,3 +108,5 @@ services:
 
 volumes:
   pulse_pgdata:
+  pulse_redisdata:
+  pulse_miniodata:

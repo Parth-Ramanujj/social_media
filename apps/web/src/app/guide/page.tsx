@@ -7,7 +7,7 @@ import '../../styles/app.css';
 export const metadata: Metadata = {
   title: 'Platform setup guide — Pulse',
   description:
-    'Step-by-step guide to connect Meta, X, LinkedIn, YouTube, Pinterest and TikTok to Pulse.',
+    'Step-by-step guide to connect Meta, X, LinkedIn and YouTube to Pulse.',
 };
 
 interface Step {
@@ -207,87 +207,6 @@ const PLATFORMS: PlatformGuide[] = [
     notes: [
       'In “Testing” mode the consent screen shows a warning — expected, harmless. Requesting <strong>Verification</strong> removes it for production.',
       'Videos upload to the channel of the account that consents. The composer needs a public video file URL for YouTube.',
-    ],
-  },
-  {
-    id: 'pinterest',
-    name: 'Pinterest',
-    headline: 'Business app on the developer portal',
-    account: 'Pinterest Business account',
-    review: 'app approval 1–3 business days',
-    appUrl: 'https://developers.pinterest.com/apps',
-    redirectUri: `${BASE}/pinterest`,
-    env: [
-      { key: 'PINTEREST_CLIENT_ID', value: '1234567890', where: 'My apps → app → “App id”' },
-      { key: 'PINTEREST_CLIENT_SECRET', value: '••••••••••••', where: 'Manage → Configure → Api keys' },
-      { key: 'PINTEREST_ENABLED', value: 'true', where: 'you set this' },
-    ],
-    scopes: 'pins:read, pins:write (create Pins) + boards:read (choose a board)',
-    create: [
-      { text: 'Create a free <strong>Pinterest Business account</strong> — the developer portal rejects personal accounts.' },
-      { text: 'Open <strong>developers.pinterest.com</strong> → sign in with the business account.' },
-      { text: 'Go to <strong>My apps → Connect app</strong> and fill in: app name, company name, website URL, privacy policy URL, and a short purpose description.' },
-      { text: 'Submit — the app starts in <strong>Trial access</strong> while Pinterest reviews it (1–3 business days).' },
-    ],
-    scopesStep: [
-      { text: 'In the app page open the <strong>Access / Permissions</strong> area and request the three scopes <strong>pins:read</strong>, <strong>pins:write</strong>, <strong>boards:read</strong>.' },
-      { text: 'Note: with Trial access you can test the OAuth flow and read boards, but creating Pins in production needs <strong>Standard access</strong> (apply with a short demo video of the flow).' },
-    ],
-    redirectStep: [
-      { text: 'Open <strong>My apps → Manage</strong> for your app → <strong>Configure</strong> tab.' },
-      { text: 'In the <strong>Redirect URIs</strong> box paste the URI below and press Enter / <strong>Add</strong> to save.' },
-    ],
-    credentials: [
-      { name: 'App ID', where: 'My apps → the “App id” under the app name', looksLike: 'number' },
-      { name: 'App Secret', where: 'Manage → Configure → “Api keys” → “App secret key” → View icon', looksLike: 'string (only visible after approval)' },
-    ],
-    verify: [
-      { text: 'Fill .env, set <strong>PINTEREST_ENABLED=true</strong>, restart the API.' },
-      { text: 'Accounts → connect → Pinterest → approve. Pins need an image: give the composer a media URL.' },
-    ],
-    notes: [
-      'If the app secret is missing you can’t see it until Pinterest approves the app — that is the 1–3 day wait.',
-      'The redirect box accepts multiple URIs — keep the one you used at app creation too.',
-    ],
-  },
-  {
-    id: 'tiktok',
-    name: 'TikTok',
-    headline: 'Developer app with the Content Posting API',
-    account: 'TikTok Business account',
-    review: 'app audit 5–10 business days',
-    appUrl: 'https://developers.tiktok.com',
-    redirectUri: `${BASE}/tiktok`,
-    env: [
-      { key: 'TIKTOK_CLIENT_KEY', value: 'aw3f0q…', where: 'Manage apps → Keys and secrets' },
-      { key: 'TIKTOK_CLIENT_SECRET', value: '••••••••••••', where: 'Manage apps → Keys and secrets (eye icon)' },
-      { key: 'TIKTOK_ENABLED', value: 'true', where: 'you set this' },
-    ],
-    scopes: 'Content Posting API — video.upload, video.publish + user.info.basic',
-    create: [
-      { text: 'Create a <strong>TikTok Business account</strong> (personal accounts can’t use the Content Posting API).' },
-      { text: 'Open <strong>developers.tiktok.com</strong> → sign in → <strong>Manage apps</strong> → <strong>Connect an app</strong>.' },
-      { text: 'Fill in app name, description and icon, then create the app. You’ll land on its dashboard.' },
-    ],
-    scopesStep: [
-      { text: 'On the app dashboard, add the <strong>Content Posting API</strong> product and enable <strong>Direct Post</strong>.' },
-      { text: 'Request the scopes <strong>video.upload</strong> and <strong>video.publish</strong> with a short use-case description — TikTok reviews these manually.' },
-    ],
-    redirectStep: [
-      { text: 'In the app settings find <strong>Redirect URI</strong> (under Login Kit / Content Posting API product config).' },
-      { text: 'Paste the URI below exactly. TikTok requires absolute URIs without query params or fragments.' },
-    ],
-    credentials: [
-      { name: 'Client Key', where: 'Manage apps → your app → “Keys and secrets” section', looksLike: '~20-char string' },
-      { name: 'Client Secret', where: 'same section → click the eye icon to reveal', looksLike: '~32-char string' },
-    ],
-    verify: [
-      { text: 'Fill <strong>TIKTOK_CLIENT_KEY</strong> + <strong>TIKTOK_CLIENT_SECRET</strong> in .env, set <strong>TIKTOK_ENABLED=true</strong>, restart the API.' },
-      { text: 'Accounts → connect → TikTok → approve. Until the app audit passes, posts stay private — still enough to verify the pipeline end to end.' },
-    ],
-    notes: [
-      'Access tokens expire after ~24 h, refresh tokens after 1 year — Pulse refreshes automatically via the stored refresh token.',
-      'TikTok requires a public HTTPS video URL in the composer (the API downloads and re-uploads it).',
     ],
   },
 ];
@@ -585,7 +504,7 @@ export default function GuidePage() {
                   <span>
                     <strong>Permissions denied on publish</strong> — the app is in development/test
                     mode and the account isn’t added as a test role, or the scope needs App Review /
-                    Advanced Access (Meta and TikTok are the usual suspects — see their notes).
+                    Advanced Access (Meta is the usual suspect — see its notes).
                   </span>
                 </div>
                 <div className="guide-note">

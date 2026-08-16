@@ -10,6 +10,7 @@ import {
   SocialProvider,
   WebhookRequest,
 } from '../social-provider.interface';
+import { ProviderError, RateLimitedError } from '../http.util';
 
 /**
  * Shared plumbing for platform providers.
@@ -43,7 +44,12 @@ export abstract class BaseProvider implements SocialProvider {
 
   protected abstract doFetchInbox(account: SocialAccountRef, since: string): Promise<InboxItem[]>;
 
-  protected abstract doReply(account: SocialAccountRef, externalMessageId: string, text: string): Promise<void>;
+  protected abstract doReply(
+    account: SocialAccountRef,
+    externalMessageId: string,
+    text: string,
+    context?: { metadata?: Record<string, unknown> },
+  ): Promise<void>;
 
   // Most platforms have no (practical) webhooks; override to implement signature checks.
   protected abstract doVerifyWebhook(req: WebhookRequest): Promise<boolean>;
@@ -64,6 +70,55 @@ export abstract class BaseProvider implements SocialProvider {
     };
   }
 
+  /**
+   * Structured trace around every provider operation: internal request id,
+   * workspace, platform, action, latency, outcome. Never logs tokens.
+   * Emits one JSON line per call so logs stay greppable by request id.
+   */
+  private async traced<T>(
+    action: string,
+    account: SocialAccountRef | null,
+    fn: () => Promise<T>,
+  ): Promise<T> {
+    const requestId = randomBytes(8).toString('hex');
+    const startedAt = Date.now();
+    const base = {
+      level: 'info',
+      requestId,
+      workspaceId: account?.workspaceId ?? null,
+      platform: this.platform,
+      action,
+    };
+    try {
+      const result = await fn();
+      console.log(
+        JSON.stringify({
+          ...base,
+          event: 'provider_ok',
+          durationMs: Date.now() - startedAt,
+        }),
+      );
+      return result;
+    } catch (e) {
+      const errorClass =
+        e instanceof ProviderError
+          ? e.errorClass
+          : e instanceof RateLimitedError
+            ? 'rate_limited'
+            : 'unknown';
+      console.log(
+        JSON.stringify({
+          ...base,
+          event: 'provider_error',
+          durationMs: Date.now() - startedAt,
+          errorClass,
+          message: e instanceof Error ? e.message : String(e),
+        }),
+      );
+      throw e;
+    }
+  }
+
   async exchangeCode(opts: { code: string; appUrl: string; state: string }): Promise<ProviderAuthResult> {
     if (!this.enabled) {
       return {
@@ -75,7 +130,7 @@ export abstract class BaseProvider implements SocialProvider {
         metadata: { dryRun: true },
       };
     }
-    return this.doExchangeCode(opts);
+    return this.traced('exchangeCode', null, () => this.doExchangeCode(opts));
   }
 
   async refreshToken(
@@ -84,7 +139,7 @@ export abstract class BaseProvider implements SocialProvider {
     if (!this.enabled) {
       return { accessToken: 'dry-run-token', refreshToken: null, expiresIn: null };
     }
-    return this.doRefreshToken(account);
+    return this.traced('refreshToken', account, () => this.doRefreshToken(account));
   }
 
   async publish(
@@ -95,36 +150,43 @@ export abstract class BaseProvider implements SocialProvider {
     if (!this.enabled) {
       return { result: { platformPostId: this.dryRunId() } };
     }
-    const { rateLimit, ...result } = await this.doPublish(account, content, opts);
-    return { result, rateLimit: rateLimit ?? undefined };
+    return this.traced('publish', account, async () => {
+      const { rateLimit, ...result } = await this.doPublish(account, content, opts);
+      return { result, rateLimit: rateLimit ?? undefined };
+    });
   }
 
   async fetchPostMetrics(account: SocialAccountRef, platformPostId: string): Promise<ProviderMetrics> {
     if (!this.enabled || platformPostId.startsWith('dry-run:')) {
       return { impressions: 0, reach: 0, likes: 0, comments: 0, shares: 0, videoViews: 0 };
     }
-    return this.doFetchPostMetrics(account, platformPostId);
+    return this.traced('fetchPostMetrics', account, () => this.doFetchPostMetrics(account, platformPostId));
   }
 
   async fetchInbox(account: SocialAccountRef, since: string): Promise<InboxItem[]> {
     if (!this.enabled) {
       return [];
     }
-    return this.doFetchInbox(account, since);
+    return this.traced('fetchInbox', account, () => this.doFetchInbox(account, since));
   }
 
-  async reply(account: SocialAccountRef, externalMessageId: string, text: string): Promise<void> {
+  async reply(
+    account: SocialAccountRef,
+    externalMessageId: string,
+    text: string,
+    context?: { metadata?: Record<string, unknown> },
+  ): Promise<void> {
     if (!this.enabled) {
       return;
     }
-    return this.doReply(account, externalMessageId, text);
+    return this.traced('reply', account, () => this.doReply(account, externalMessageId, text, context));
   }
 
   verifyWebhook(req: WebhookRequest): Promise<boolean> {
     if (!this.enabled) {
       return Promise.resolve(false);
     }
-    return this.doVerifyWebhook(req);
+    return this.traced('verifyWebhook', null, () => this.doVerifyWebhook(req));
   }
 
   parseRateLimit(headers: Record<string, string | string[] | undefined>): RateLimitInfo | null {

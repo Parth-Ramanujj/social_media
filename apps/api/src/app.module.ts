@@ -19,6 +19,7 @@ import { PublishingModule } from './publishing/publishing.module';
 import { OauthModule } from './oauth/oauth.module';
 import { InboxModule } from './inbox/inbox.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     OauthModule,
     InboxModule,
     AnalyticsModule,
+    WebhooksModule,
   ],
   providers: [
     {

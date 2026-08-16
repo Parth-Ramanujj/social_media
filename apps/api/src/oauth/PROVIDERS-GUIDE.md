@@ -39,17 +39,6 @@
  *    http://localhost:4000/api/oauth/callback/youtube
  * 5. Fill in: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET.
  *
- * ============================== Pinterest ==============================
- * 1. https://developers.pinterest.com/apps -> create app (Business account).
- * 2. Redirect: http://localhost:4000/api/oauth/callback/pinterest
- * 3. Fill in: PINTEREST_CLIENT_ID, PINTEREST_CLIENT_SECRET.
- *
- * ============================== TikTok =================================
- * 1. https://developers.tiktok.com -> create app (Business account).
- * 2. Enable "Content Posting API"; redirect:
- *    http://localhost:4000/api/oauth/callback/tiktok
- * 3. Fill in: TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_SECRET.
- *
  * Common gotchas:
  * - Redirect URIs are validated EXACTLY by every platform. Use the values
  *   above (APP_URL default http://localhost:4000).

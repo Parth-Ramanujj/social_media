@@ -14,6 +14,10 @@ const TONE: Record<string, string> = {
   cancelled: 'chip--cancelled',
   connected: 'chip--published',
   needs_reconnect: 'chip--failed',
+  permission_missing: 'chip--failed',
+  token_expired: 'chip--failed',
+  reauth_required: 'chip--warning',
+  unsupported_account: 'chip--draft',
   disconnected: 'chip--neutral',
 };
 

@@ -20,6 +20,8 @@ const SCOPES = [
   'pages_show_list',
   'instagram_basic',
   'instagram_content_publish',
+  'instagram_manage_comments',
+  'instagram_manage_messages',
   'read_insights',
   'business_management',
   'pages_messaging',
@@ -39,7 +41,7 @@ export class MetaProvider extends BaseProvider {
   constructor(config: ConfigService, registry: ProviderRegistry) {
     super(config);
     registry.register(this);
-    this.apiVersion = config.get<string>('META_APP_VERSION') ?? 'v22.0';
+    this.apiVersion = config.get<string>('META_APP_VERSION') ?? 'v26.0';
   }
 
   private get appId(): string {
@@ -169,7 +171,7 @@ export class MetaProvider extends BaseProvider {
         { method: 'POST' },
       );
       if (media.status !== 200) {
-        throw new ProviderError('Meta IG media container failed', media.status, media.json);
+        throw new ProviderError(this.fbError('Meta IG media container failed', media), media.status, media.json);
       }
       const publish = await httpJson(
         this.graph(`${igId}/media_publish`) +
@@ -178,7 +180,7 @@ export class MetaProvider extends BaseProvider {
         { method: 'POST' },
       );
       if (publish.status !== 200) {
-        throw new ProviderError('Meta IG media_publish failed', publish.status, publish.json);
+        throw new ProviderError(this.fbError('Meta IG media_publish failed', publish), publish.status, publish.json);
       }
       return {
         platformPostId: String(publish.json.id),
@@ -203,7 +205,7 @@ export class MetaProvider extends BaseProvider {
     }
     const res = await httpJson(this.graph(endpoint) + '?' + body.toString(), { method: 'POST' });
     if (res.status !== 200) {
-      throw new ProviderError('Meta page post failed', res.status, res.json);
+      throw new ProviderError(this.fbError('Meta page post failed', res), res.status, res.json);
     }
     return {
       platformPostId: String(res.json.id),
@@ -236,38 +238,194 @@ export class MetaProvider extends BaseProvider {
   }
 
   protected async doFetchInbox(account: SocialAccountRef, since: string): Promise<InboxItem[]> {
-    const res = await httpJson(
-      this.graph(`${account.externalAccountId}/comments`) +
-        '?' +
-        new URLSearchParams({
-          access_token: account.accessToken,
-          fields: 'id,message,from{name,id},created_time,parent{id}',
-          since,
-          limit: '50',
-        }),
+    const sinceMs = new Date(since).getTime();
+    const token = account.accessToken;
+    const pageId = account.externalAccountId;
+    const items: InboxItem[] = [];
+    const q = (params: Record<string, string>) => '?' + new URLSearchParams(params).toString();
+
+    // Page-level /comments is unreliable (404s on some pages), so walk the
+    // recent feed and pull comments per post — this works for pages and profiles.
+    const feed = await httpJson(
+      this.graph(`${pageId}/feed`) +
+        q({ access_token: token, fields: 'id', limit: '25' }),
     );
-    if (res.status !== 200) {
-      throw new ProviderError('Meta comments fetch failed', res.status, res.json);
+    if (feed.status !== 200) {
+      throw new ProviderError('Meta feed fetch failed', feed.status, feed.json);
     }
-    return (res.json.data ?? []).map((c: any) => ({
-      externalMessageId: String(c.id),
-      type: 'comment',
-      senderName: c.from?.name ?? 'Unknown',
-      content: c.message ?? '',
-      createdAt: new Date(c.created_time),
-      raw: { parentId: c.parent?.id ?? null },
-    }));
+    for (const post of feed.json.data ?? []) {
+      const comments = await httpJson(
+        this.graph(`${post.id}/comments`) +
+          q({
+            access_token: token,
+            fields: 'id,message,from{name,id},created_time,parent{id}',
+            limit: '100',
+          }),
+      );
+      if (comments.status !== 200) {
+        continue;
+      }
+      for (const c of comments.json.data ?? []) {
+        const createdAt = new Date(c.created_time);
+        if (createdAt.getTime() < sinceMs) continue;
+        items.push({
+          externalMessageId: String(c.id),
+          type: 'comment',
+          senderName: c.from?.name ?? 'Unknown',
+          content: c.message ?? '',
+          createdAt,
+          raw: { parentId: c.parent?.id ?? null },
+        });
+      }
+    }
+
+    const igId = account.metadata?.igBusinessAccountId as string | undefined;
+    if (igId) {
+      try {
+        const igMedia = await httpJson(
+          this.graph(`${igId}/media`) +
+            q({ access_token: token, fields: 'id', limit: '25' }),
+        );
+        if (igMedia.status === 200) {
+          for (const post of igMedia.json.data ?? []) {
+            const comments = await httpJson(
+              this.graph(`${post.id}/comments`) +
+                q({
+                  access_token: token,
+                  fields: 'id,text,from{username,id},timestamp',
+                  limit: '100',
+                }),
+            );
+            if (comments.status === 200) {
+              for (const c of comments.json.data ?? []) {
+                const createdAt = new Date(c.timestamp);
+                if (createdAt.getTime() < sinceMs) continue;
+                items.push({
+                  externalMessageId: String(c.id),
+                  type: 'comment',
+                  senderName: c.from?.username ?? 'Instagram User',
+                  content: c.text ?? '',
+                  createdAt,
+                  raw: { parentId: null },
+                });
+              }
+            }
+          }
+        }
+      } catch (e) {
+        /* ignore IG fetch errors */
+      }
+    }
+
+    // Messenger DMs (best effort — pages without messaging configured return []).
+    try {
+      const convs = await httpJson(
+        this.graph(`${pageId}/conversations`) +
+          q({
+            access_token: token,
+            fields: 'id,updated_time,messages.limit(1){id,message,from{name,id},created_time}',
+            limit: '50',
+          }),
+      );
+      if (convs.status === 200) {
+        for (const conv of convs.json.data ?? []) {
+          const last = conv.messages?.data?.[0];
+          if (!last) continue;
+          const createdAt = new Date(last.created_time ?? conv.updated_time);
+          if (createdAt.getTime() < sinceMs) continue;
+          items.push({
+            externalMessageId: String(last.id),
+            type: 'dm',
+            senderName: last.from?.name ?? 'Unknown',
+            content: last.message ?? '',
+            createdAt,
+            raw: { conversationId: String(conv.id), participantId: last.from?.id ?? null },
+          });
+        }
+      }
+    } catch {
+      /* conversations unavailable — comments only */
+    }
+
+    // Instagram DMs
+    if (igId) {
+      try {
+        const igConvs = await httpJson(
+          this.graph(`${igId}/conversations`) +
+            q({
+              platform: 'instagram',
+              access_token: token,
+              fields: 'id,updated_time,messages.limit(1){id,message,from{name,username,id},created_time}',
+              limit: '50',
+            }),
+        );
+        if (igConvs.status === 200) {
+          for (const conv of igConvs.json.data ?? []) {
+            const last = conv.messages?.data?.[0];
+            if (!last) continue;
+            const createdAt = new Date(last.created_time ?? conv.updated_time);
+            if (createdAt.getTime() < sinceMs) continue;
+            items.push({
+              externalMessageId: String(last.id),
+              type: 'dm',
+              senderName: last.from?.username ?? last.from?.name ?? 'Instagram User',
+              content: last.message ?? '',
+              createdAt,
+              raw: { conversationId: String(conv.id), participantId: last.from?.id ?? null },
+            });
+          }
+        }
+      } catch {
+        /* ignore IG DM errors */
+      }
+    }
+
+    return items;
   }
 
   protected async doReply(account: SocialAccountRef, externalMessageId: string, text: string): Promise<void> {
+    const token = account.accessToken;
+    // Messenger DM ids start with m_ and can't use /replies. Resolve the
+    // participant from the message, then send via the Messenger Send API.
+    if (externalMessageId.startsWith('m_')) {
+      const msg = await httpJson(
+        this.graph(externalMessageId) +
+          '?' +
+          new URLSearchParams({ access_token: token, fields: 'from{id}' }),
+      );
+      if (msg.status !== 200) {
+        throw new ProviderError('Meta DM participant fetch failed', msg.status, msg.json);
+      }
+      const recipientId = msg.json?.from?.id;
+      if (!recipientId) {
+        throw new ProviderError('Meta DM has no resolvable recipient', msg.status, msg.json);
+      }
+      const send = await httpJson(
+        this.graph('me/messages') + '?' + new URLSearchParams({ access_token: token }),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipient: { id: recipientId },
+            message: { text },
+            messaging_type: 'RESPONSE',
+          }),
+        },
+      );
+      if (send.status !== 200) {
+        throw new ProviderError(this.fbError('Meta DM reply failed', send), send.status, send.json);
+      }
+      return;
+    }
+
     const res = await httpJson(
       this.graph(`${externalMessageId}/replies`) +
         '?' +
-        new URLSearchParams({ message: text, access_token: account.accessToken }),
+        new URLSearchParams({ message: text, access_token: token }),
       { method: 'POST' },
     );
     if (res.status !== 200) {
-      throw new ProviderError('Meta reply failed', res.status, res.json);
+      throw new ProviderError(this.fbError('Meta reply failed', res), res.status, res.json);
     }
   }
 
@@ -303,5 +461,16 @@ export class MetaProvider extends BaseProvider {
     const out: Record<string, string | string[] | undefined> = {};
     res.headers.forEach((v, k) => (out[k] = v));
     return out;
+  }
+
+  /** Human-friendly Graph API error; prefers FB's user-facing detail when present. */
+  private fbError(prefix: string, res: { status: number; json: any }): string {
+    const err = res.json?.error ?? {};
+    const detail =
+      err.error_user_msg ??
+      err.message ??
+      JSON.stringify(res.json ?? {}).slice(0, 300);
+    const code = err.code ? `, code ${err.code}` : '';
+    return `${prefix} (${res.status}${code}): ${detail}`;
   }
 }

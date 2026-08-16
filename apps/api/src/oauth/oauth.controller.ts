@@ -56,10 +56,10 @@ export class OauthController {
     try {
       await this.oauth.handleCallback({ platform: params.platform, code, state });
       res.status(302);
-      return { url: `${this.config.get<string>('frontendUrl')}/settings/accounts?connected=${params.platform}` };
+      return { url: `${this.config.get<string>('frontendUrl')}/app/accounts?connected=${params.platform}` };
     } catch {
       res.status(302);
-      return { url: `${this.config.get<string>('frontendUrl')}/settings/accounts?error=connect_failed` };
+      return { url: `${this.config.get<string>('frontendUrl')}/app/accounts?error=connect_failed` };
     }
   }
 

@@ -3,7 +3,7 @@ import { config as loadEnv } from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
-loadEnv({ path: resolve(__dirname, '../../.env') });
+loadEnv({ path: resolve(__dirname, '../../../.env') });
 
 /**
  * Dev seed: creates a demo user (pulse@example.com / pulse1234) with a

@@ -42,7 +42,9 @@ export class LinkedInProvider extends BaseProvider {
       response_type: 'code',
       client_id: this.clientId,
       redirect_uri: `${opts.appUrl}/api/oauth/callback/linkedin`,
-      scope: 'w_member_social r_liteprofile r_emailaddress openid profile email',
+      // Modern LinkedIn (2024+): openid/profile/email replaced the deprecated
+      // r_liteprofile/r_emailaddress; w_member_social enables posts.
+      scope: 'w_member_social openid profile email',
       state: opts.state,
     });
     return `https://www.linkedin.com/oauth/v2/authorization?${params}`;

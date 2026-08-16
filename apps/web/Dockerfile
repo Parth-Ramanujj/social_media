@@ -3,7 +3,7 @@
 # Build:  docker build -f apps/web/Dockerfile -t pulse-web .
 # Run:    docker run -p 3000:3000 -e NEXT_PUBLIC_API_URL=http://localhost:4000/api pulse-web
 
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 RUN corepack enable
 WORKDIR /app
 
@@ -11,7 +11,7 @@ FROM base AS deps
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/web/package.json apps/web/package.json
 COPY packages/shared-types/package.json packages/shared-types/package.json
-RUN pnpm install --frozen-lockfile --filter @pulse/web
+RUN pnpm install --frozen-lockfile --filter @pulse/web --fetch-retries=6 --fetch-retry-mintimeout=30000 --network-concurrency=6
 
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules

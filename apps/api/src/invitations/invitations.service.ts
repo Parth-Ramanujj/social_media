@@ -4,6 +4,7 @@ import { InvitationStatus, Role } from '@prisma/client';
 import { createHash, randomBytes } from 'node:crypto';
 import { AuditService } from '../common/audit/audit.service';
 import { MailerService } from '../common/mailer/mailer.service';
+import { NotificationService } from '../common/notifications/notification.service';
 import { PrismaService } from '../common/prisma/prisma.service';
 
 export const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -15,6 +16,7 @@ export class InvitationsService {
     private readonly mailer: MailerService,
     private readonly audit: AuditService,
     private readonly config: ConfigService,
+    private readonly notifications: NotificationService,
   ) {}
 
   async create(opts: {
@@ -111,6 +113,18 @@ export class InvitationsService {
       action: 'invitation.accepted',
       targetType: 'invitation',
       targetId: invitation.id,
+    });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true },
+    });
+    await this.notifications.notifyWorkspaceExcept({
+      workspaceId: invitation.workspaceId,
+      exceptUserId: userId,
+      type: 'invitation.accepted',
+      title: `${user?.name ?? 'Someone'} joined the workspace`,
+      body: `Accepted the invite as ${invitation.role}.`,
     });
 
     return membership.membership;

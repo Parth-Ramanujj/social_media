@@ -10,9 +10,12 @@ const NAV = [
   { href: '/app', label: 'Dashboard', idx: '01' },
   { href: '/app/composer', label: 'Composer', idx: '02' },
   { href: '/app/accounts', label: 'Accounts', idx: '03' },
-  { href: '/app/members', label: 'Members', idx: '04' },
-  { href: '/app/audit', label: 'Audit log', idx: '05' },
-  { href: '/app/settings', label: 'Settings', idx: '06' },
+  { href: '/app/inbox', label: 'Inbox', idx: '04' },
+  { href: '/app/members', label: 'Members', idx: '05' },
+  { href: '/app/audit', label: 'Audit log', idx: '06' },
+  { href: '/app/analytics', label: 'Analytics', idx: '07' },
+  { href: '/app/notifications', label: 'Notifications', idx: '08' },
+  { href: '/app/settings', label: 'Settings', idx: '09' },
 ];
 
 export function Sidebar() {

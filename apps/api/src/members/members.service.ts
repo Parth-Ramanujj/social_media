@@ -2,12 +2,14 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { Role } from '@pulse/shared-types';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { AuditService } from '../common/audit/audit.service';
+import { NotificationService } from '../common/notifications/notification.service';
 
 @Injectable()
 export class MembersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationService,
   ) {}
 
   list(workspaceId: string) {
@@ -65,6 +67,17 @@ export class MembersService {
       targetId: target.id,
       meta: { userId: targetUserId, from: target.role, to: newRole },
     });
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { name: true },
+    });
+    await this.notifications.create({
+      userId: targetUserId,
+      workspaceId,
+      type: 'member.role_changed',
+      title: `Your role changed to ${newRole}`,
+      body: `In ${workspace?.name ?? 'your workspace'} — by ${actorId}.`,
+    });
     return updated;
   }
 
@@ -95,6 +108,17 @@ export class MembersService {
       targetType: 'workspace_member',
       targetId: target.id,
       meta: { userId: targetUserId },
+    });
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { name: true },
+    });
+    await this.notifications.create({
+      userId: targetUserId,
+      workspaceId,
+      type: 'member.removed',
+      title: `You were removed from ${workspace?.name ?? 'the workspace'}`,
+      body: 'Your access to this workspace has been revoked.',
     });
   }
 }

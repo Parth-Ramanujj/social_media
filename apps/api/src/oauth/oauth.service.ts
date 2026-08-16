@@ -67,6 +67,42 @@ export class OauthService {
       throw new NotFoundException('Workspace not found');
     }
 
+    const isDryRun = opts.code === 'dryrun' || result.externalAccountId.startsWith('dry-run:');
+    if (isDryRun) {
+      // Dry-run: every connect fabricates a new external id, so "reconnect" would
+      // otherwise duplicate accounts. Reuse the workspace's existing dry-run
+      // account for this platform instead — token refresh replaces it.
+      const existing = await this.prisma.socialAccount.findFirst({
+        where: {
+          workspaceId: payload.workspaceId,
+          platform: opts.platform,
+          metadata: { path: ['dryRun'], equals: true },
+        },
+      });
+      if (existing) {
+        const account = await this.prisma.socialAccount.update({
+          where: { id: existing.id },
+          data: {
+            displayName: result.displayName,
+            accessTokenEncrypted: this.encryption.encrypt(result.accessToken),
+            refreshTokenEncrypted: result.refreshToken ? this.encryption.encrypt(result.refreshToken) : null,
+            tokenExpiresAt: result.expiresIn ? new Date(Date.now() + result.expiresIn * 1000) : null,
+            status: 'connected',
+            metadata: result.metadata as Prisma.InputJsonObject,
+          },
+        });
+        await this.audit.log({
+          workspaceId: payload.workspaceId,
+          userId: payload.userId,
+          action: 'social_account.reconnected',
+          targetType: 'social_account',
+          targetId: account.id,
+          meta: { platform: opts.platform, dryRun: true },
+        });
+        return account;
+      }
+    }
+
     const existing = await this.prisma.socialAccount.findUnique({
       where: { platform_externalAccountId: { platform: opts.platform, externalAccountId: result.externalAccountId } },
     });

@@ -75,11 +75,11 @@ Web app (Next.js 15, `apps/web`, port :3000). All app pages are client-side unde
 - `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` — long random hex strings
 - `SMTP_*` — point at mailpit (localhost:1025) in dev; UI at http://localhost:8025
 - `S3_*` — MinIO in dev (console http://localhost:9001, user `pulse` / `pulse-minio-secret`)
-- Platform credentials `META_*`, `X_*`, `LINKEDIN_*`, `GOOGLE_*` (YouTube), `PINTEREST_*`, `TIKTOK_*` + `<PLATFORM>_ENABLED` flags
+- Platform credentials `META_*`, `X_*`, `LINKEDIN_*`, `GOOGLE_*` (YouTube) + `<PLATFORM>_ENABLED` flags
 
 ## Connecting social platforms
 
-Step-by-step registration for every platform is in `apps/api/src/oauth/PROVIDERS-GUIDE.md` (Meta, X, LinkedIn, YouTube, Pinterest, TikTok). The gist:
+Step-by-step registration for every platform is in `apps/api/src/oauth/PROVIDERS-GUIDE.md` (Meta, X, LinkedIn, YouTube). The gist:
 
 1. Create a developer app in the platform's console (links in the guide).
 2. Set the OAuth redirect URI to `http://localhost:4000/api/oauth/callback/<platform>` — platforms validate these exactly.
@@ -104,8 +104,8 @@ packages/shared-types/  shared Platform/Role/limits types (raw TS source, worksp
 - [x] BullMQ publishing engine (idempotent, retry/backoff) — verified live fire
 - [x] Next.js web app: auth, publish desk, composer, accounts, members, audit, settings
 - [x] Unified inbox (mock → assign → reply → resolve), analytics + CSV export (demo data), notifications (bell, unread badge, mark-all-read)
-- [ ] Meta provider end-to-end (connect → post → analytics) — reference implementation
-- [ ] X / LinkedIn / YouTube / Pinterest / TikTok providers
+- [x] Meta provider end-to-end (connect → post → analytics) — reference implementation
+- [ ] X / LinkedIn / YouTube providers
 - [ ] Docker/deploy config
 
 ## Security notes

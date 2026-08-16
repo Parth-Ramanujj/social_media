@@ -8,8 +8,7 @@ import { MetaProvider } from './providers/meta/meta.provider';
 import { XProvider } from './providers/x/x.provider';
 import { LinkedInProvider } from './providers/linkedin/linkedin.provider';
 import { YouTubeProvider } from './providers/youtube/youtube.provider';
-import { PinterestProvider } from './providers/pinterest/pinterest.provider';
-import { TikTokProvider } from './providers/tiktok/tiktok.provider';
+import { WhatsAppProvider } from './providers/whatsapp/whatsapp.provider';
 
 /**
  * Social platform integrations. Every platform implements SocialProvider and
@@ -32,8 +31,7 @@ import { TikTokProvider } from './providers/tiktok/tiktok.provider';
     XProvider,
     LinkedInProvider,
     YouTubeProvider,
-    PinterestProvider,
-    TikTokProvider,
+    WhatsAppProvider,
   ],
   exports: [OauthService, ProviderRegistry],
 })

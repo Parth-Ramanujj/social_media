@@ -201,19 +201,26 @@ function DashboardInner() {
                 {['draft', 'scheduled', 'failed', 'queued'].includes(post.status) && (
                   <button
                     className="btn btn--sm"
-                    disabled={busyId === post.id}
+                    disabled={busyId === post.id || post.variants.length === 0}
+                    title={
+                      post.variants.length === 0
+                        ? 'No social accounts attached to this post'
+                        : undefined
+                    }
                     onClick={() => void act(post, 'publish-now')}
                   >
                     publish now
                   </button>
                 )}
-                <button
-                  className="btn btn--sm btn--danger"
-                  disabled={busyId === post.id}
-                  onClick={() => setConfirmDelete(post)}
-                >
-                  delete
-                </button>
+                {['draft', 'queued', 'failed', 'cancelled'].includes(post.status) && (
+                  <button
+                    className="btn btn--sm btn--danger"
+                    disabled={busyId === post.id}
+                    onClick={() => setConfirmDelete(post)}
+                  >
+                    delete
+                  </button>
+                )}
               </div>
             </article>
           ))

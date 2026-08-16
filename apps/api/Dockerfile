@@ -3,7 +3,7 @@
 # Build:  docker build -f apps/api/Dockerfile -t pulse-api .
 # Run:    docker run --env-file .env -p 4000:4000 pulse-api
 
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 RUN corepack enable
 WORKDIR /app
 
@@ -11,13 +11,13 @@ FROM base AS deps
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/shared-types/package.json packages/shared-types/package.json
-RUN pnpm install --frozen-lockfile --filter @pulse/api
+RUN pnpm install --frozen-lockfile --filter @pulse/api --fetch-retries=6 --fetch-retry-mintimeout=30000 --network-concurrency=6
 
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY . .
-RUN pnpm --filter @pulse/api build && pnpm --filter @pulse/api exec prisma generate
+RUN pnpm --filter @pulse/api exec prisma generate && pnpm --filter @pulse/api build
 
 FROM base AS runner
 ENV NODE_ENV=production

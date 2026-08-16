@@ -2,14 +2,17 @@
 
 import { usePathname } from 'next/navigation';
 import { useWorkspace } from '@/lib/auth-context';
+import { NotificationsBell } from './notifications-bell';
 
 const TITLES: Record<string, { index: string; title: string }> = {
   '/app': { index: '01', title: 'Dashboard' },
   '/app/composer': { index: '02', title: 'Composer' },
   '/app/accounts': { index: '03', title: 'Accounts' },
-  '/app/members': { index: '04', title: 'Members' },
-  '/app/audit': { index: '05', title: 'Audit log' },
-  '/app/settings': { index: '06', title: 'Settings' },
+  '/app/inbox': { index: '04', title: 'Inbox' },
+  '/app/members': { index: '05', title: 'Members' },
+  '/app/audit': { index: '06', title: 'Audit log' },
+  '/app/analytics': { index: '07', title: 'Analytics' },
+  '/app/settings': { index: '08', title: 'Settings' },
 };
 
 export function Topbar() {
@@ -28,6 +31,7 @@ export function Topbar() {
           {workspace ? `${workspace.name} · ${workspace.plan}` : 'no workspace'}
         </span>
         <span className="chip chip--platform">api :4000</span>
+        <NotificationsBell />
       </div>
     </header>
   );

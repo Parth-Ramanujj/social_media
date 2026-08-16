@@ -28,14 +28,25 @@ enum Platform {
   x
   linkedin
   youtube
-  pinterest
-  tiktok
+  whatsapp
 }
 
 enum AccountStatus {
   connected
   needs_reconnect
+  permission_missing
+  token_expired
+  reauth_required
+  unsupported_account
   disconnected
+}
+
+enum WebhookEventStatus {
+  received
+  processing
+  processed
+  failed
+  dead
 }
 
 enum PostStatus {
@@ -88,6 +99,7 @@ model Workspace {
   mediaAssets MediaAsset[]
   auditLogs  AuditLog[]
   notifications Notification[]
+  webhookEvents WebhookEvent[]
 
   @@index([plan])
 }
@@ -107,6 +119,7 @@ model User {
   auditLogs         AuditLog[]
   notifications     Notification[]
   inboxAssigned     Inbox[]               @relation("InboxAssigned")
+  inboxReplies      InboxReply[]          @relation("InboxReplies")
 
   @@index([email])
 }
@@ -269,16 +282,61 @@ model Inbox {
   senderName       String
   content          String
   status           InboxMessageStatus @default(unassigned)
+  metadata         Json?
   assignedTo       String?
   repliedAt        DateTime?
   createdAt        DateTime           @default(now())
 
   socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
   assignee      User?         @relation("InboxAssigned", fields: [assignedTo], references: [id])
+  replies       InboxReply[]
 
   @@unique([platform, externalMessageId])
   @@index([status])
   @@index([createdAt])
+}
+
+/// A reply sent from Pulse back to the platform (dry-run: stored for the thread view).
+model InboxReply {
+  id        String   @id @default(cuid())
+  inboxId   String
+  content   String
+  repliedBy String
+  createdAt DateTime @default(now())
+
+  inbox       Inbox @relation(fields: [inboxId], references: [id], onDelete: Cascade)
+  repliedByUser User? @relation("InboxReplies", fields: [repliedBy], references: [id])
+
+  @@index([inboxId])
+}
+
+/// Every webhook event received from a platform (Meta Graph / WhatsApp Cloud API).
+/// Persisted for idempotency (unique external id or payload hash), retry bookkeeping
+/// and replay/audit. External ids are unique per platform when the platform provides
+/// one; the payload hash guarantees dedupe even when the platform does not.
+model WebhookEvent {
+  id              String             @id @default(cuid())
+  workspaceId     String?
+  platform        Platform
+  /// Webhook field that produced the event: 'messages', 'comments', 'feed', 'conversations', ...
+  source          String
+  /// Platform event/message id when available (e.g. WhatsApp message id, Messenger m_ id).
+  externalEventId String?
+  /// sha256 of the canonical payload — the unconditional dedupe key.
+  eventHash       String             @unique
+  payload         Json
+  status          WebhookEventStatus @default(received)
+  attempts        Int                @default(0)
+  lastError       String?
+  receivedAt      DateTime           @default(now())
+  processedAt     DateTime?
+  createdAt       DateTime           @default(now())
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([platform, externalEventId])
+  @@index([status])
+  @@index([receivedAt])
 }
 
 model AnalyticsSnapshot {

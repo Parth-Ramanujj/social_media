@@ -79,3 +79,87 @@ export interface MemberRoleResultDTO {
   userId: string;
   role: Role;
 }
+
+export interface InboxReplyDTO {
+  id: string;
+  inboxId: string;
+  content: string;
+  repliedBy: string;
+  createdAt: string;
+  repliedByUser?: { id: string; name: string; email: string } | null;
+}
+
+export interface InboxMessageDTO {
+  id: string;
+  socialAccountId: string;
+  platform: string;
+  externalMessageId: string;
+  type: string;
+  senderName: string;
+  content: string;
+  status: string;
+  assignedTo: string | null;
+  repliedAt: string | null;
+  createdAt: string;
+  socialAccount?: { id: string; platform: string; displayName: string };
+  assignee?: { id: string; name: string; email: string } | null;
+  replies: InboxReplyDTO[];
+}
+
+export interface InboxListDTO {
+  items: InboxMessageDTO[];
+  total: number;
+  counts: { unassigned: number; assigned: number; resolved: number };
+}
+
+export interface InboxSyncResult {
+  accounts: number;
+  fetched: number;
+  created: number;
+  errors: Array<{ accountId: string; platform: string; message: string }>;
+}
+
+export interface NotificationDTO {
+  id: string;
+  userId: string;
+  workspaceId: string | null;
+  type: string;
+  title: string;
+  body: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface AnalyticsPointDTO {
+  date: string;
+  impressions: number;
+  reach: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  videoViews: number;
+}
+
+export interface AnalyticsSummaryDTO {
+  days: number;
+  totals: Omit<AnalyticsPointDTO, 'date'>;
+  series: AnalyticsPointDTO[];
+  perAccount: Array<{
+    socialAccountId: string;
+    _sum: {
+      impressions: number | null;
+      reach: number | null;
+      likes: number | null;
+      comments: number | null;
+      shares: number | null;
+      videoViews: number | null;
+    };
+  }>;
+  accountsTracked: number;
+  generated: boolean;
+}
+
+export interface CsvExportDTO {
+  filename: string;
+  content: string;
+}

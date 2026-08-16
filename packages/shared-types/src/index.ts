@@ -8,8 +8,7 @@ export const PLATFORMS = [
   'x',
   'linkedin',
   'youtube',
-  'pinterest',
-  'tiktok',
+  'whatsapp',
 ] as const;
 
 export type Platform = (typeof PLATFORMS)[number];
@@ -38,7 +37,15 @@ export const PUBLISH_STATUSES = [
 ] as const;
 export type PublishStatus = (typeof PUBLISH_STATUSES)[number];
 
-export const ACCOUNT_STATUSES = ['connected', 'needs_reconnect', 'disconnected'] as const;
+export const ACCOUNT_STATUSES = [
+  'connected',
+  'needs_reconnect',
+  'permission_missing',
+  'token_expired',
+  'reauth_required',
+  'unsupported_account',
+  'disconnected',
+] as const;
 export type AccountStatus = (typeof ACCOUNT_STATUSES)[number];
 
 export const INBOX_MESSAGE_TYPES = ['comment', 'dm'] as const;
@@ -53,8 +60,7 @@ export const PLATFORM_LIMITS: Record<Platform, { text: number; maxMedia: number;
   x: { text: 280, maxMedia: 4, maxHashtags: 50 },
   linkedin: { text: 3000, maxMedia: 9, maxHashtags: 5 },
   youtube: { text: 5000, maxMedia: 1, maxHashtags: 15 },
-  pinterest: { text: 500, maxMedia: 10, maxHashtags: 20 },
-  tiktok: { text: 2200, maxMedia: 1, maxHashtags: 5 },
+  whatsapp: { text: 4096, maxMedia: 1, maxHashtags: 0 },
 };
 
 export interface WorkspaceDTO {

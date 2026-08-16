@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Prisma } from '@prisma/client';
 import { AuditService } from '../common/audit/audit.service';
@@ -51,7 +51,9 @@ export class PublishProcessor extends WorkerHost {
     if (variant.platformPostId) {
       return 'already-published';
     }
-    if (variant.publishStatus !== 'scheduled') {
+    // 'publishing' = crash residue (a previous attempt died mid-flight). The
+    // job is running again, so resume the publish instead of deadlocking.
+    if (variant.publishStatus !== 'scheduled' && variant.publishStatus !== 'publishing') {
       return `skipped (${variant.publishStatus})`;
     }
 
@@ -137,6 +139,7 @@ export class PublishProcessor extends WorkerHost {
     return 'published';
   }
 
+  @OnWorkerEvent('failed')
   async onFailed(job: Job<PublishJobData>, err: Error) {
     const { variantId } = job.data;
     try {
