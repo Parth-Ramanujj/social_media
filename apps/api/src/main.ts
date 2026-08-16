@@ -29,7 +29,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    origin: (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, ''),
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
   });
