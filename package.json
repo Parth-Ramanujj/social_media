@@ -5,7 +5,7 @@
   "description": "Multi-tenant social media management platform (Buffer/Hootsuite-style)",
   "packageManager": "pnpm@11.20.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13.0"
   },
   "scripts": {
     "dev:api": "pnpm --filter @pulse/api start:dev",
