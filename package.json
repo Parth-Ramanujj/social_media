@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev:api": "pnpm --filter @pulse/api start:dev",
-    "build": "pnpm -r --filter \"./apps/*\" build",
+    "build": "pnpm --filter @pulse/api prisma:generate && pnpm -r --filter \"./apps/*\" build",
     "db:generate": "pnpm --filter @pulse/api prisma:generate",
     "db:migrate": "pnpm --filter @pulse/api prisma:migrate",
     "db:studio": "pnpm --filter @pulse/api prisma:studio",
